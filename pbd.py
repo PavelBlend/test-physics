@@ -60,9 +60,9 @@ class Particle:
         if not self.st:
             # delta position
             d = self.x - self.p
-            self.x = self.p
+            self.p = self.x
             # gravity
-            self.a[2] -= 1.0
+            self.a[2] -= 9.81
             self.x += d + self.a * dt * dt
 
 
@@ -84,12 +84,12 @@ def seed_pars():
                 par.x[1] = y * par_size - off
                 par.x[2] = z * par_size
                 # preview position
-                par.p[0] = x * par_size
-                par.p[1] = y * par_size
+                par.p[0] = x * par_size - off
+                par.p[1] = y * par_size - off
                 par.p[2] = z * par_size
                 # radius
                 par.r = par_radius
-                par.a[2] = -9.81
+                par.a[2] = -1.0
                 pars.append(par)
 
     par = Particle()
@@ -141,19 +141,23 @@ def step(dt):
     global pars
     global links
     par_cnt = len(pars)
-    for i in range(0, par_cnt - 1):
-        for j in range(i + 1, par_cnt):
-            p1 = pars[i]
-            p2 = pars[j]
-            if (p1.x - p2.x).length < p1.r + p2.r:
-                # penetration direction
-                direct = (p2.x - p1.x).normalized()
-                # penetration depth
-                depth = p1.r + p2.r - (p2.x - p1.x).length
-                if not p1.st:
-                    p1.x += -direct * depth * 0.5
-                if not p2.st:
-                    p2.x += direct * depth * 0.5
+    kd = mathutils.kdtree.KDTree(len(pars))
+    for i, p in enumerate(pars):
+        kd.insert(p.x, i)
+    kd.balance()
+    for p1 in pars:
+        # neighbors
+        ns = kd.find_range(p1.x, p1.r * 2)
+        for x, i, d in ns:
+            p2 = pars[i]
+            # penetration direction
+            direct = (p2.x - p1.x).normalized()
+            # penetration depth
+            depth = p1.r + p2.r - (p2.x - p1.x).length
+            if not p1.st:
+                p1.x += -direct * depth * 0.5
+            if not p2.st:
+                p2.x += direct * depth * 0.5
     for p in pars:
         p.move(dt)
     for l in links:
