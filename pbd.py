@@ -1,3 +1,10 @@
+# This add-on uses Position Based Dynamics to calculate collisions and
+# calculate links between particles.
+# The description of the PBD method is taken from this article:
+# https://www.gamedev.ru/code/articles/PositionBasedPhysics
+# Addon status: test addon, experimental, work in progress.
+
+
 bl_info = {
     'name': 'Position Based Dynamics',
     'blender': (2, 82, 0),
